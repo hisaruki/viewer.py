@@ -1,0 +1,62 @@
+<html>
+
+<head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: #ccc;
+        }
+
+        article {
+            position: fixed;
+            right: -500;
+            top: 0;
+            display: flex;
+            flex-direction: row-reverse;
+            width: 100%;
+            height: 100%;
+        }
+
+        img {
+            display: none;
+            width: auto;
+            flex-shrink: 0;
+        }
+
+        nav {
+            opacity: 0;
+            width: 100%;
+            background: #fff;
+            z-index: 255;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+        }
+
+        nav:hover {
+            opacity: 0.95;
+        }
+
+        button {
+            margin: 1em;
+            padding: 1em;
+        }
+        button.active {
+            background: lightgreen;
+        }
+        var {
+            display: none;
+        }
+    </style>
+</head>
+<nav>
+    <button id="flex-direction">row-reverse</button>
+    <button id="centering" class="">centering</button>
+    <button id="speed"><var>10</var><span>x1</span></button>
+    <var id="gt">-</var> / <var id="tp">-</var> pages
+</nav>
