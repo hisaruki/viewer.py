@@ -1,12 +1,15 @@
 (function () {
     var gt = 0;
+    var hori = true;
     var moving = null;
     var resize = function () {
-        var y = $(window).height();
-        $("img").css("display", "inline-flex");
-        var x = $("[data-first]").width();
-        x = Math.ceil(x);
-        $("img.dummy").css("width", x + "px");
+        if(hori){
+            $("img").css("width", "inherit");
+            $("img").css("height", $(window).height() + "px");
+        }else{
+            $("img").css("width", $(window).width() + "px");
+            $("img").css("height", "inherit");
+        }
         if (moving) {
             clearInterval(moving);
             moving = null;
@@ -16,15 +19,20 @@
 
     var speed = 10;
 
-    var get_gt_as_is = function(){
-        var lefts = []
-        $("img").each(function(){
-            var left = $(this)[0].getBoundingClientRect().left;
-            left = Math.ceil(left);
-            left = Math.abs(left)
-            lefts.push(left);
+    var get_gt_as_is = function () {
+        var rects = []
+        $("img").each(function () {
+            var rect = $(this)[0].getBoundingClientRect()
+            if (hori) {
+                rect = Math.ceil(rect.left);
+            } else {
+                rect = Math.ceil(rect.top);
+            }
+            rect = Math.ceil(rect);
+            rect = Math.abs(rect)
+            rects.push(rect);
         });
-        return lefts.indexOf(Math.min.apply(null, lefts));
+        return rects.indexOf(Math.min.apply(null, rects));
     }
 
     var focus = function (obj, linear) {
@@ -32,24 +40,49 @@
             clearInterval(moving);
             moving = null;
         }
-        var left = obj[0].getBoundingClientRect().left;
-        left = Math.ceil(left);
+
+        var rect = obj[0].getBoundingClientRect()
+        if (hori) {
+            rect = Math.ceil(rect.left);
+        } else {
+            rect = Math.ceil(rect.top);
+        }
+
         var target = 0;
         if ($("#centering").hasClass("active")) {
-            target = Math.ceil($(window).width() / 2);
+            if (hori) {
+                target = Math.ceil($(window).width() / 2);
+            } else {
+                target = Math.ceil($(window).height() / 2);
+            }
         }
 
         var go = -1;
-        if (left > target) {
+        if (!hori) {
+            go = go * -1;
+        }
+        if (rect > target) {
             go = go * -1;
         }
 
+        distance = Math.abs(target - rect);
+
         moving = setInterval(function () {
-            x = $("article").css("right");
+            if (hori) {
+                x = $("article").css("right");
+            } else {
+                x = $("article").css("top");
+            }
             x = x.replace("px", "") - 0
-            left = obj[0].getBoundingClientRect().left
-            left = Math.ceil(left);
-            distance = Math.abs(target - left);
+
+            var rect = obj[0].getBoundingClientRect()
+            if (hori) {
+                rect = Math.ceil(rect.left);
+            } else {
+                rect = Math.ceil(rect.top);
+            }
+
+            distance = Math.abs(target - rect);
 
             if (distance > 16 && !linear) {
                 go = go / Math.abs(go);
@@ -57,16 +90,22 @@
             } else {
                 go = go / Math.abs(go);
             }
+
             if (linear > 0) {
                 gt = get_gt_as_is();
             }
             $("#gt").text(gt + 1);
-            $("article").css("right", x + go);
+            if (hori) {
+                $("article").css("right", x + go);
+            } else {
+                $("article").css("top", x + go);
+            }
             if (!distance) {
                 clearInterval(moving);
                 moving = null;
             }
         }, speed);
+
         $("#gt").text(gt + 1);
     }
 
@@ -94,7 +133,7 @@
     setInterval(function () {
         if (autopage > 0 && !moving) {
             apseq++;
-            if( (apseq / speed) == Math.ceil(apseq / speed) ){
+            if ((apseq / speed) == Math.ceil(apseq / speed)) {
                 gt += 1;
                 if (gt >= $("img").length) {
                     gt = 0;
@@ -107,9 +146,9 @@
 
     $("#speed").on("click", function () {
         speed = speed / 2;
-        if(speed > 1){
+        if (speed > 1) {
             speed = Math.ceil(speed);
-        }else{
+        } else {
             speed = 30;
         }
         $("var", this).text(Math.ceil(speed));
@@ -126,6 +165,8 @@
     })
 
     $("#flex-direction").on("click", function () {
+        $("article").css("right", "0px");
+        $("article").css("top", "0px");
         var options = [
             "row-reverse",
             "row",
@@ -134,13 +175,22 @@
         ];
         var v = $(this).text();
         var i = options.indexOf(v);
-        if(i+1 < options.length){
-            v = options[i+1];
-        }else{
-            v = options[0];
+        if (i + 1 < options.length) {
+            i++;
+        } else {
+            i = 0;
         }
+        v = options[i];
+
+        if (i == 2 || i == 3) {
+            hori = false;
+        } else {
+            hori = true;
+        }
+
         $(this).text(v);
         $("article").css("flex-direction", v)
+        resize();
         focus($("img").eq(gt));
     })
 
