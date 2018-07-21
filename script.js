@@ -1,12 +1,13 @@
 (function () {
     var gt = 0;
+    $("#gt").text(gt + 1);
     var hori = true;
     var moving = null;
     var resize = function () {
-        if(hori){
+        if (hori) {
             $("img").css("width", "inherit");
             $("img").css("height", $(window).height() + "px");
-        }else{
+        } else {
             $("img").css("width", $(window).width() + "px");
             $("img").css("height", "inherit");
         }
@@ -14,7 +15,6 @@
             clearInterval(moving);
             moving = null;
         }
-        focus($("img").eq(gt));
     }
 
     var speed = 10;
@@ -90,11 +90,6 @@
             } else {
                 go = go / Math.abs(go);
             }
-
-            if (linear > 0) {
-                gt = get_gt_as_is();
-            }
-            $("#gt").text(gt + 1);
             if (hori) {
                 $("article").css("right", x + go);
             } else {
@@ -113,18 +108,24 @@
 
     $(window).on("resize load", function () {
         resize();
+        focus($("img").eq(gt));
     });
     $("img").eq(0).attr("data-first", 1);
     resize();
+    focus($("img").eq(gt));
 
     var slideshow = -1;
     setInterval(function () {
-        if (slideshow > 0 && !moving) {
-            if (gt == $("img").length - 1) {
-                focus($("img").eq(0), false);
-            } else {
-                focus($("img").eq($("img").length - 1), true);
+        if (slideshow > 0) {
+            if (!moving) {
+                if (gt == $("img").length - 1) {
+                    focus($("img").eq(0), false);
+                } else {
+                    focus($("img").eq($("img").length - 1), true);
+                }
             }
+            gt = get_gt_as_is();
+            $("#gt").text(gt + 1);
         }
     }, 100);
 
@@ -149,7 +150,7 @@
         if (speed > 1) {
             speed = Math.ceil(speed);
         } else {
-            speed = 30;
+            speed = 40;
         }
         $("var", this).text(Math.ceil(speed));
         $("span", this).text("x" + (10 / speed));
@@ -203,13 +204,16 @@
             }
             slideshow = slideshow * -1;
         }
+
         //r
         if (e.which == 114) {
+            /*
             if (autopage > 0 && moving) {
                 clearInterval(moving);
                 moving = null;
             }
             autopage = autopage * -1;
+            */
         }
 
         //num
