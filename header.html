@@ -12,15 +12,32 @@
             background: #ccc;
         }
 
-        article {
+        #main {
             position: fixed;
             right: 0;
             top: 0;
             display: flex;
             flex-direction: row-reverse;
+            z-index: 1;
         }
 
-        img {
+        #sub {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 50%;
+            height: 100%;
+            background: #000;
+            z-index: 2;
+            display: none;
+        }
+
+        #sub img {
+            width: 100%;
+            height: auto;
+        }
+
+        #main img {
             display: inline-flex;
             flex-shrink: 0;
         }
@@ -33,6 +50,7 @@
             position: fixed;
             bottom: 0;
             left: 0;
+            z-index: 3;
         }
 
         nav:hover {
@@ -43,6 +61,7 @@
             margin: 1em;
             padding: 1em;
         }
+
         button.active {
             background: lightgreen;
         }
@@ -51,6 +70,10 @@
 <nav>
     <button id="flex-direction">row-reverse</button>
     <button id="centering" class="">centering</button>
-    <button id="speed"><var style="display:none;">10</var><span>x1</span></button>
-    <var id="gt">-</var> / <var id="tp">-</var> pages
+    <button id="speed">
+        <var style="display:none;">10</var>
+        <span>x1</span>
+    </button>
+    <var id="gt">-</var> /
+    <var id="tp">-</var> pages
 </nav>

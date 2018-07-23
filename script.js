@@ -5,11 +5,11 @@
     var moving = null;
     var resize = function () {
         if (hori) {
-            $("img").css("width", "inherit");
-            $("img").css("height", $(window).height() + "px");
+            $("#main img").css("width", "inherit");
+            $("#main img").css("height", $(window).height() + "px");
         } else {
-            $("img").css("width", $(window).width() + "px");
-            $("img").css("height", "inherit");
+            $("#main img").css("width", $(window).width() + "px");
+            $("#main img").css("height", "inherit");
         }
         if (moving) {
             clearInterval(moving);
@@ -69,9 +69,9 @@
 
         moving = setInterval(function () {
             if (hori) {
-                x = $("article").css("right");
+                x = $("#main").css("right");
             } else {
-                x = $("article").css("top");
+                x = $("#main").css("top");
             }
             x = x.replace("px", "") - 0
 
@@ -91,9 +91,9 @@
                 go = go / Math.abs(go);
             }
             if (hori) {
-                $("article").css("right", x + go);
+                $("#main").css("right", x + go);
             } else {
-                $("article").css("top", x + go);
+                $("#main").css("top", x + go);
             }
             if (!distance) {
                 clearInterval(moving);
@@ -166,8 +166,8 @@
     })
 
     $("#flex-direction").on("click", function () {
-        $("article").css("right", "0px");
-        $("article").css("top", "0px");
+        $("#main").css("right", "0px");
+        $("#main").css("top", "0px");
         var options = [
             "row-reverse",
             "row",
@@ -190,7 +190,7 @@
         }
 
         $(this).text(v);
-        $("article").css("flex-direction", v)
+        $("#main").css("flex-direction", v)
         resize();
         focus($("img").eq(gt));
     })
@@ -251,5 +251,15 @@
 
     });
 
+    $("#main img").on("click", function () {
+        var src = $(this).attr("src");
+        $("#sub img").attr("src", src);
+        $("#sub").show();
+        var w = $(window).width() - $(this).width();
+        $("#sub").width(w);
+    });
+    $("#sub").on("click", function () {
+        $(this).hide();
+    });
 
 })();
