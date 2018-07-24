@@ -75,8 +75,6 @@ if fp.exists():
                 print(e)
 
         html += '</article>'
-
-        html += '<article id="sub"><img></article>'
         html += add_script('jquery-3.3.1.slim.min.js')
         html += add_script('script.js')
 

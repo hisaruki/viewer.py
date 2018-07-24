@@ -21,7 +21,7 @@
 
     var get_gt_as_is = function () {
         var rects = []
-        $("img").each(function () {
+        $("#main img").each(function () {
             var rect = $(this)[0].getBoundingClientRect()
             if (hori) {
                 rect = Math.ceil(rect.left);
@@ -104,24 +104,24 @@
         $("#gt").text(gt + 1);
     }
 
-    $("#tp").text($("img").length);
+    $("#tp").text($("#main img").length);
 
     $(window).on("resize load", function () {
         resize();
-        focus($("img").eq(gt));
+        focus($("#main img").eq(gt));
     });
-    $("img").eq(0).attr("data-first", 1);
+    $("#main img").eq(0).attr("data-first", 1);
     resize();
-    focus($("img").eq(gt));
+    focus($("#main img").eq(gt));
 
     var slideshow = -1;
     setInterval(function () {
         if (slideshow > 0) {
             if (!moving) {
-                if (gt == $("img").length - 1) {
-                    focus($("img").eq(0), false);
+                if (gt == $("#main img").length - 1) {
+                    focus($("#main img").eq(0), $("#between").hasClass("active"));
                 } else {
-                    focus($("img").eq($("img").length - 1), true);
+                    focus($("#main img").eq($("#main img").length - 1), true);
                 }
             }
             gt = get_gt_as_is();
@@ -136,10 +136,10 @@
             apseq++;
             if ((apseq / speed) == Math.ceil(apseq / speed)) {
                 gt += 1;
-                if (gt >= $("img").length) {
+                if (gt >= $("#main img").length) {
                     gt = 0;
                 }
-                focus($("img").eq(gt));
+                focus($("#main img").eq(gt));
             }
         }
     }, 100);
@@ -160,9 +160,9 @@
         }
     });
 
-    $("#centering").on("click", function () {
+    $("#centering, #between").on("click", function () {
         $(this).toggleClass("active");
-        focus($("img").eq(gt));
+        focus($("#main img").eq(gt));
     })
 
     $("#flex-direction").on("click", function () {
@@ -192,7 +192,7 @@
         $(this).text(v);
         $("#main").css("flex-direction", v)
         resize();
-        focus($("img").eq(gt));
+        focus($("#main img").eq(gt));
     })
 
     $(document).on("keypress", function (e) {
@@ -228,18 +228,18 @@
         //j
         if (e.which == 106) {
             gt += 1;
-            if (gt >= $("img").length) {
+            if (gt >= $("#main img").length) {
                 gt = 0;
             }
-            focus($("img").eq(gt));
+            focus($("#main img").eq(gt));
         }
         //k
         if (e.which == 107) {
             gt -= 1;
             if (gt < 0) {
-                gt = $("img").length - 1;
+                gt = $("#main img").length - 1;
             }
-            focus($("img").eq(gt));
+            focus($("#main img").eq(gt));
         }
         //h
         if (e.which == 104) {
@@ -250,16 +250,4 @@
 
 
     });
-
-    $("#main img").on("click", function () {
-        var src = $(this).attr("src");
-        $("#sub img").attr("src", src);
-        $("#sub").show();
-        var w = $(window).width() - $(this).width();
-        $("#sub").width(w);
-    });
-    $("#sub").on("click", function () {
-        $(this).hide();
-    });
-
 })();
