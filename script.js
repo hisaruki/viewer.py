@@ -225,22 +225,42 @@
         //substruct
         if (e.which == 45) {
         }
-        //j
-        if (e.which == 106) {
+        console.log(e.which)
+        //jd
+        if (e.which == 106 || e.which == 97) {
             gt += 1;
             if (gt >= $("#main img").length) {
                 gt = 0;
             }
             focus($("#main img").eq(gt));
         }
-        //k
-        if (e.which == 107) {
+        //ka
+        if (e.which == 107 || e.which == 100) {
             gt -= 1;
             if (gt < 0) {
                 gt = $("#main img").length - 1;
             }
             focus($("#main img").eq(gt));
         }
+
+        //w
+        if (e.which == 119) {
+            gt -= 2;
+            if (gt < 0) {
+                gt = $("#main img").length - 1;
+            }
+            focus($("#main img").eq(gt));
+        }
+        //s
+        if (e.which == 115) {
+            gt += 2;
+            if (gt >= $("#main img").length) {
+                gt = 0;
+            }
+            focus($("#main img").eq(gt));
+        }
+
+
         //h
         if (e.which == 104) {
         }
