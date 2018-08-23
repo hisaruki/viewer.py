@@ -66,6 +66,10 @@
         }
 
         distance = Math.abs(target - rect);
+        var myspeed = speed;
+        if(!linear){
+            myspeed = 5;
+        }
 
         moving = setInterval(function () {
             if (hori) {
@@ -99,7 +103,7 @@
                 clearInterval(moving);
                 moving = null;
             }
-        }, speed);
+        }, myspeed);
 
         $("#gt").text(gt + 1);
     }
@@ -145,19 +149,36 @@
     }, 100);
 
 
-    $("#speed").on("click", function () {
-        speed = speed / 2;
-        if (speed > 1) {
-            speed = Math.ceil(speed);
+    var change_speed = function (mode) {
+        if (mode == "button") {
+            speed = speed / 2;
+            if (speed > 1) {
+                speed = Math.ceil(speed);
+            } else {
+                speed = 40;
+            }
         } else {
-            speed = 40;
+            if (mode > 0) {
+                speed = Math.ceil(speed / 2);
+            } else {
+                speed = Math.ceil(speed * 2);
+                if (speed > 40) {
+                    speed = 40;
+                }
+            }
         }
-        $("var", this).text(Math.ceil(speed));
-        $("span", this).text("x" + (10 / speed));
+        $("#speed var").text(Math.ceil(speed));
+        $("#speed span").text("x" + (10 / speed));
         if (slideshow > 0 && moving) {
             clearInterval(moving);
             moving = null;
+            slideshow = 1;
         }
+    }
+
+
+    $("#speed").on("click", function () {
+        change_speed("button")
     });
 
     $("#centering, #between").on("click", function () {
@@ -268,6 +289,14 @@
         if (e.which == 108) {
         }
 
+        //plus
+        if (e.which == 43) {
+            change_speed(1);
+        }
+        //substruct
+        if (e.which == 45) {
+            change_speed(-1);
+        }
 
     });
 })();
