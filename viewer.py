@@ -12,6 +12,7 @@ from mimetypes import guess_type
 from pathlib import Path
 from base64 import encodestring
 from collections import deque
+from PIL import Image
 import webbrowser
 
 parser = argparse.ArgumentParser(description="path")
@@ -19,6 +20,7 @@ parser.add_argument("path", nargs="*")
 parser.add_argument("--order", default="page")
 parser.add_argument("--maxpage", type=int, default=500)
 parser.add_argument("--maxpath", type=int, default=32)
+parser.add_argument("--resample", type=int, default=1080)
 parser.add_argument("--data", action="store_true")
 parser.add_argument("--reverse", action="store_true")
 parser.add_argument("--repeat", type=int, default=1)
@@ -28,11 +30,23 @@ if not sys.stdin.isatty():
     for l in sys.stdin:
         args.path.append(l.strip())
 
+
+def resample(p, size):
+    i = Image.open(str(p))
+    i.thumbnail((size, size), Image.LANCZOS)
+    i.save(str(p))
+    return p
+
+
+resamplecheck = None
+
 for fp in deque(args.path, args.maxpath):
     fp = Path(fp).resolve()
 
     html = (Path(__file__).resolve().parent / Path("header.html")).read_text()
     html += '\n    <body><article id="main">\n'
+
+    html += '<title>' + fp.stem + '</title>\n'
 
     def add_script(path, tag='script'):
         html = '<' + tag + '>'
@@ -107,6 +121,16 @@ for fp in deque(args.path, args.maxpath):
             for p in deque(files, args.maxpage):
                 try:
                     if guess_type(p.name)[0].split("/")[0] == "image":
+
+                        if resamplecheck is None:
+                            i = Image.open(str(p))
+                            w, h = i.size
+                            if h <= args.resample * 2:
+                                args.resample = 0
+                            resamplecheck = True
+
+                        if args.resample:
+                            p = resample(p, args.resample)
                         src = p.as_uri()
                         if args.data:
                             src = as_data_uri(p)

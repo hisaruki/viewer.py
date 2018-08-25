@@ -216,6 +216,12 @@
         focus($("#main img").eq(gt));
     })
 
+    $("img").on("mouseup", function (e) {
+        if (e.which == 2) {
+            $(this).remove();
+        }
+    });
+
     $(document).on("keypress", function (e) {
         //space
         if (e.which == 32) {
@@ -298,5 +304,10 @@
             change_speed(-1);
         }
 
+    }).on("mousemove", function(){
+        $("#main").removeClass("hide");
+        setTimeout(function(){
+            $("#main").addClass("hide");
+        },1500);
     });
 })();
