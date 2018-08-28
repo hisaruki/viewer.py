@@ -117,6 +117,9 @@ for fp in deque(args.path, args.maxpath):
             for i in range(0, args.repeat):
                 files += fc
             print(len(files), "pages")
+            
+            if len(files) < 64:
+                args.data = True
 
             for p in deque(files, args.maxpage):
                 try:
@@ -131,6 +134,8 @@ for fp in deque(args.path, args.maxpath):
 
                         if args.resample:
                             p = resample(p, args.resample)
+                            args.data = True
+
                         src = p.as_uri()
                         if args.data:
                             src = as_data_uri(p)
@@ -140,6 +145,8 @@ for fp in deque(args.path, args.maxpath):
                     print(e)
 
             html += '</article>'
+            html += '<article id="sub"></article>'
+            html += add_script('sub.css', 'style')
             html += add_script('jquery-3.3.1.slim.min.js')
             html += add_script('script.js')
 

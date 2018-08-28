@@ -67,7 +67,7 @@
 
         distance = Math.abs(target - rect);
         var myspeed = speed;
-        if(!linear){
+        if (!linear) {
             myspeed = 5;
         }
 
@@ -177,8 +177,19 @@
     }
 
 
+    $("#main img").on("click", function () {
+        var img = '<img src="' + $(this).attr("src") + '">';
+        $("#sub").show();
+        $("#sub").empty();
+        $("#sub").append($(img));
+    });
+
+    $("#sub").on("click", function () {
+        $(this).hide();
+    });
+
     $("#speed").on("click", function () {
-        change_speed("button")
+        change_speed("button");
     });
 
     $("#centering, #between").on("click", function () {
@@ -223,6 +234,14 @@
     });
 
     $(document).on("keypress", function (e) {
+        //1-9
+        if (49 <= e.which && e.which <= 57) {
+            var per = e.which - 49;
+            gt = Math.ceil($("#main img").length / 9 * per);
+            focus($("#main img").eq(gt));
+        }
+
+
         //space
         if (e.which == 32) {
             if (slideshow > 0 && moving) {
@@ -304,10 +323,10 @@
             change_speed(-1);
         }
 
-    }).on("mousemove", function(){
+    }).on("mousemove", function () {
         $("#main").removeClass("hide");
-        setTimeout(function(){
+        setTimeout(function () {
             $("#main").addClass("hide");
-        },1500);
+        }, 1500);
     });
 })();
