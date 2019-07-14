@@ -1,15 +1,23 @@
 (function () {
     var gt = 0;
     $("#gt").text(gt + 1);
+    var autoslide = -1;
     var hori = true;
     var moving = null;
     var resize = function () {
         if (hori) {
             $("#main img").css("width", "inherit");
             $("#main img").css("height", $(window).height() + "px");
+            $("#main").css("left", "inherit");
         } else {
-            $("#main img").css("width", $(window).width() + "px");
+            var w = $(window).width();
+            if($("#sub").is(":visible")){
+                w -= $("#sub").width();
+            }
+            $("#main img").css("width", w + "px");
             $("#main img").css("height", "inherit");
+            $("#main").css("right", "inherit");
+            $("#main").css("left", 0);
         }
         if (moving) {
             clearInterval(moving);
@@ -135,17 +143,27 @@
 
     var autopage = -1;
     var apseq = 1;
+    var skipped = 1;
     setInterval(function () {
         if (autopage > 0 && !moving) {
             apseq++;
             if ((apseq / speed) == Math.ceil(apseq / speed)) {
                 gt += 1;
-                if (gt >= $("#main img").length) {
+                if (gt >= $("#main img").length && $("#loop").hasClass("active")) {
                     gt = 0;
                 }
                 focus($("#main img").eq(gt));
             }
         }
+        if (autoslide == 1 && skipped % (speed * 10) == 0){
+            gt += 1;
+            if (gt >= $("#main img").length && $("#loop").hasClass("active")) {
+                gt = 0;
+            }
+            focus($("#main img").eq(gt));
+            skipped = 1;
+        }
+        skipped++;
     }, 100);
 
 
@@ -176,23 +194,32 @@
         }
     }
 
+    $("#save").on("click", function () {
+        var link = document.createElement('a');
+        link.href = window.URL.createObjectURL(new Blob(['<html>' + $("html").html() + "</html>"]));
+        link.download = filename + ".html";
+        link.click();
+    });
+
 
     $("#main img").on("click", function () {
         var img = '<img src="' + $(this).attr("src") + '">';
         $("#sub").show();
         $("#sub").empty();
         $("#sub").append($(img));
+        resize();
     });
 
     $("#sub").on("click", function () {
         $(this).hide();
+        resize();
     });
 
     $("#speed").on("click", function () {
         change_speed("button");
     });
 
-    $("#centering, #between").on("click", function () {
+    $("#centering, #between, #loop").on("click", function () {
         $(this).toggleClass("active");
         focus($("#main img").eq(gt));
     })
@@ -230,6 +257,42 @@
     $("img").on("mouseup", function (e) {
         if (e.which == 2) {
             $(this).remove();
+        }
+    });
+
+
+    $(document).on("keydown", function (e) {
+        //right
+        if (e.which == 37) {
+            gt += 1;
+            if (gt >= $("#main img").length) {
+                gt = 0;
+            }
+            focus($("#main img").eq(gt));
+        }
+        //left
+        if (e.which == 39) {
+            gt -= 1;
+            if (gt < 0) {
+                gt = $("#main img").length - 1;
+            }
+            focus($("#main img").eq(gt));
+        }
+        //up
+        if (e.which == 38) {
+            gt -= 2;
+            if (gt < 0) {
+                gt = $("#main img").length - 1;
+            }
+            focus($("#main img").eq(gt));
+        }
+        //down
+        if (e.which == 40) {
+            gt += 2;
+            if (gt >= $("#main img").length) {
+                gt = 0;
+            }
+            focus($("#main img").eq(gt));
         }
     });
 
@@ -271,8 +334,8 @@
         //substruct
         if (e.which == 45) {
         }
-        console.log(e.which)
-        //jd
+
+        //j, d
         if (e.which == 106 || e.which == 97) {
             gt += 1;
             if (gt >= $("#main img").length) {
@@ -280,7 +343,7 @@
             }
             focus($("#main img").eq(gt));
         }
-        //ka
+        //k, a
         if (e.which == 107 || e.which == 100) {
             gt -= 1;
             if (gt < 0) {
@@ -321,6 +384,11 @@
         //substruct
         if (e.which == 45) {
             change_speed(-1);
+        }
+
+        //enter
+        if (e.which == 13) {
+            autoslide *= -1;
         }
 
     }).on("mousemove", function () {
