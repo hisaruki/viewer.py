@@ -12,7 +12,7 @@ import sys
 from subprocess import Popen
 from mimetypes import guess_type
 from pathlib import Path
-from base64 import encodestring
+from base64 import encodebytes
 from collections import deque
 from PIL import Image
 import webbrowser
@@ -26,7 +26,7 @@ parser.add_argument("--maxpath", type=int, default=32)
 parser.add_argument("--resample", type=int, default=0)
 parser.add_argument("--data", action="store_true")
 parser.add_argument("--reverse", action="store_true")
-parser.add_argument("--autocrop", action="store_true")
+parser.add_argument("--nocrop", action="store_true")
 parser.add_argument("--repeat", type=int, default=None)
 args = parser.parse_args()
 
@@ -55,24 +55,58 @@ def resample(p, size):
     i.save(str(p))
     return p
 
-def autocrop(p, threshold=232, giveup=7):
-    im = Image.open(str(p)).convert("RGB")
-    w, h = im.size
-    for tw in range(0, int(w / giveup)):
-        res = min([numpy.average(im.getpixel((tw, th))) for th in range(0, h)])
-        tl = tw
-        if res < threshold:
+def autocrop(p, threshold=208, giveup=7):
+    def is_edge(div):
+        result = False
+        c = div.getcolors()
+        if len(c) > 1:
+            result = True
+            mi = min([x[0] for x in c])
+            ma = max([x[0] for x in c])
+            if mi / ma < 0.005:
+                result = False
+        return result
+
+    try:
+        image = Image.open(p)
+    except:
+        return p
+    image = image.convert("L")
+    image = image.point(lambda x: 255 if x > threshold else 0)
+
+    for left in range(0, image.size[0]):
+        div = image.crop((0, 0, left, image.size[1]))
+        if is_edge(div):
+            left -= 1
             break
 
-    for tw in range(0, int(w / giveup)):
-        res = min([numpy.average(im.getpixel((w - tw - 1, th))) for th in range(0, h)])
-        tr = tw
-        if res < threshold:
+    for right in range(0, image.size[0]):
+        div = image.crop((image.size[0] - right, 0, image.size[0], image.size[1]))
+        if is_edge(div):
+            right -= 1
+            right = image.size[0] - right
             break
 
-    im = im.crop((tl, 0, w - tr, h))
-    print(p, w, "=>", w - tl - tr)
-    im.save(str(p), quality=100, compress_level=0)
+    for top in range(0, image.size[1]):
+        div = image.crop((0, 0, image.size[0], top))
+        if is_edge(div):
+            top -= 1
+            break
+
+    for bottom in range(0, image.size[1]):
+        div = image.crop((0, image.size[1] - bottom, image.size[0], image.size[1]))
+        if is_edge(div):
+            bottom -= 1
+            bottom = image.size[1] - bottom
+            break
+
+    print(left, right, top, bottom)
+
+    image = Image.open(p)
+    image = image.crop((left, top, right, bottom))
+
+
+    image.save(str(p), quality=100, compress_level=0)
     return p
 
 for fp in deque(args.path, args.maxpath):
@@ -95,7 +129,7 @@ for fp in deque(args.path, args.maxpath):
         src = 'data:'
         src += m
         src += ';base64,'
-        src += encodestring(bin).decode("utf-8")
+        src += encodebytes(bin).decode("utf-8")
         return src
 
     if fp.exists():
@@ -203,7 +237,7 @@ for fp in deque(args.path, args.maxpath):
                             p = resample(p, args.resample)
                             args.data = True
 
-                        if args.autocrop:
+                        if args.nocrop is False:
                             p = autocrop(p)
 
                         src = p.as_uri()
