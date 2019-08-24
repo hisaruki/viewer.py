@@ -23,8 +23,7 @@ parser.add_argument("--order", default=None)
 parser.add_argument("--sort", default=None)
 parser.add_argument("--maxpage", type=int, default=500)
 parser.add_argument("--maxpath", type=int, default=32)
-parser.add_argument("--resample", type=int, default=0)
-parser.add_argument("--data", action="store_true")
+parser.add_argument("--resample", type=int, default=1080)
 parser.add_argument("--reverse", action="store_true")
 parser.add_argument("--nocrop", action="store_true")
 parser.add_argument("--repeat", type=int, default=None)
@@ -38,6 +37,7 @@ if not sys.stdin.isatty():
         args.path.append(l.strip())
 
 args.path = [Path(fp) for fp in args.path]
+
 def res(p):
     if not p.is_absolute():
         p = p.resolve()
@@ -227,22 +227,16 @@ for fp in deque(args.path, args.maxpath):
                 files += fc
             print(len(files), "pages")
             
-            if len(files) < 64:
-                args.data = True
-
             for p in deque(files, args.maxpage):
                 try:
                     if guess_type(p.name)[0].split("/")[0] == "image":
-                        if args.resample:
-                            p = resample(p, args.resample)
-                            args.data = True
-
                         if args.nocrop is False:
                             p = autocrop(p)
+                        if args.resample:
+                            p = resample(p, args.resample)
 
-                        src = p.as_uri()
-                        if args.data:
-                            src = as_data_uri(p)
+                        #src = p.as_uri()
+                        src = as_data_uri(p)
                         img = '\t\t\t<img src=" ' + src + ' ">\n'
                         html += img
                 except Exception as e:
