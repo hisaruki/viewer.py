@@ -1,4 +1,4 @@
 argparse
 pathlib
 pyyaml
-PIL
+Pillow

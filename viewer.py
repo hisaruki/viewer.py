@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import numpy
 import tempfile
 import argparse
 import zipfile
@@ -16,6 +15,10 @@ from base64 import encodebytes
 from collections import deque
 from PIL import Image
 import webbrowser
+from screeninfo import get_monitors
+
+for m in get_monitors():
+    window_height = m.height
 
 parser = argparse.ArgumentParser(description="path")
 parser.add_argument("path", nargs="*")
@@ -23,7 +26,7 @@ parser.add_argument("--order", default=None)
 parser.add_argument("--sort", default=None)
 parser.add_argument("--maxpage", type=int, default=500)
 parser.add_argument("--maxpath", type=int, default=32)
-parser.add_argument("--resample", type=int, default=1080)
+parser.add_argument("--resample", type=int, default=window_height)
 parser.add_argument("--reverse", action="store_true")
 parser.add_argument("--nocrop", action="store_true")
 parser.add_argument("--repeat", type=int, default=None)
@@ -36,6 +39,7 @@ if not sys.stdin.isatty():
     for l in sys.stdin:
         args.path.append(l.strip())
 
+args.path = map(lambda x:x.replace('`', ''), args.path)
 args.path = [Path(fp) for fp in args.path]
 
 def res(p):
@@ -50,10 +54,11 @@ def res(p):
 args.path = map(res, args.path)
 
 def resample(p, size):
-    i = Image.open(str(p))
+    np = p.parent / Path(p.stem + ".jpg")
+    i = Image.open(str(p)).convert('RGB')
     i.thumbnail((size, size), resample=Image.LANCZOS)
-    i.save(str(p))
-    return p
+    i.save(str(np), quality=97, optimize=True, progressive=True)
+    return np
 
 def autocrop(p, threshold=208, giveup=7):
     def is_edge(div):
@@ -63,7 +68,7 @@ def autocrop(p, threshold=208, giveup=7):
             result = True
             mi = min([x[0] for x in c])
             ma = max([x[0] for x in c])
-            if mi / ma < 0.005:
+            if mi / ma < 0.001:
                 result = False
         return result
 
@@ -110,6 +115,7 @@ def autocrop(p, threshold=208, giveup=7):
     return p
 
 for fp in deque(args.path, args.maxpath):
+    print(fp, fp.exists())
     html = (Path(__file__).resolve().parent / Path("header.html")).read_text()
     html += '\n    <body><article id="main">\n'
 
@@ -229,6 +235,7 @@ for fp in deque(args.path, args.maxpath):
             
             for p in deque(files, args.maxpage):
                 try:
+                    print(p)
                     if guess_type(p.name)[0].split("/")[0] == "image":
                         if args.nocrop is False:
                             p = autocrop(p)
@@ -254,7 +261,7 @@ for fp in deque(args.path, args.maxpath):
             html += '</body>'
             html += '</html>'
             url = Path(str(tf)) / Path("index.html")
-            url.write_text(html)
+            url.write_text(html, encoding="utf-8")
             if len(files):
                 """
                 Popen([
@@ -263,5 +270,4 @@ for fp in deque(args.path, args.maxpath):
                 ])
                 """
                 webbrowser.open(url.as_uri())
-                
             time.sleep(3)

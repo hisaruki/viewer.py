@@ -57,6 +57,7 @@
         }
 
         var target = 0;
+        //var target = $(window).width() - obj.width();
         if ($("#centering").hasClass("active")) {
             if (hori) {
                 target = Math.ceil($(window).width() / 2);
