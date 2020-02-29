@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import re
 import tempfile
 import argparse
 import zipfile
@@ -8,16 +9,23 @@ import random
 import yaml
 import re
 import sys
-from subprocess import Popen
 from mimetypes import guess_type
+from subprocess import Popen
 from pathlib import Path
 from base64 import encodebytes
 from collections import deque
 from PIL import Image
-import webbrowser
 from screeninfo import get_monitors
 
-for m in get_monitors():
+monitors = get_monitors()
+seq = 0
+while not len(monitors):
+    monitors = get_monitors()
+    seq += 1
+    if seq > 300:
+        sys.stderr.write("can not detect monitors.")
+        sys.exit()
+for m in monitors:
     window_height = m.height
 
 parser = argparse.ArgumentParser(description="path")
@@ -60,7 +68,7 @@ def resample(p, size):
     i.save(str(np), quality=97, optimize=True, progressive=True)
     return np
 
-def autocrop(p, threshold=208, giveup=7):
+def autocrop(p, threshold=208, giveup=6):
     def is_edge(div):
         result = False
         c = div.getcolors()
@@ -84,6 +92,8 @@ def autocrop(p, threshold=208, giveup=7):
         if is_edge(div):
             left -= 1
             break
+        if left > image.size[0] / giveup:
+            break
 
     for right in range(0, image.size[0]):
         div = image.crop((image.size[0] - right, 0, image.size[0], image.size[1]))
@@ -91,11 +101,15 @@ def autocrop(p, threshold=208, giveup=7):
             right -= 1
             right = image.size[0] - right
             break
+        if right > image.size[0] / giveup:
+            break
 
     for top in range(0, image.size[1]):
         div = image.crop((0, 0, image.size[0], top))
         if is_edge(div):
             top -= 1
+            break
+        if top > image.size[1] / giveup:
             break
 
     for bottom in range(0, image.size[1]):
@@ -103,6 +117,8 @@ def autocrop(p, threshold=208, giveup=7):
         if is_edge(div):
             bottom -= 1
             bottom = image.size[1] - bottom
+            break
+        if bottom > image.size[1] / giveup:
             break
 
     print(left, right, top, bottom)
@@ -119,7 +135,21 @@ for fp in deque(args.path, args.maxpath):
     html = (Path(__file__).resolve().parent / Path("header.html")).read_text()
     html += '\n    <body><article id="main">\n'
 
-    html += '<title>' + fp.stem + '</title>\n'
+    title = fp.stem
+    brackets_list = [('\[', '\]'), ('\(', '\)'), ('【', '】'), ('（', '）')]
+    brackets_solid = [x[0] for x in brackets_list] + [x[1] for x in brackets_list]
+    def replace_brakets(text, brackets):
+        b0 = brackets[0]
+        b1 = brackets[1]
+        m = '{}[^{}{}]*{}'.format(b0, b0, b1, b1)
+        m = re.compile(m)
+        return re.sub(m, '', text)
+
+    while True in list(map(lambda x:bool(re.search(x, title)), brackets_solid)):
+        for brakets in brackets_list:
+            title = replace_brakets(title, brakets)
+    title = title.strip()
+    html += '<title>' + title + '</title>\n'
 
     def add_script(path, tag='script'):
         html = '<' + tag + '>'
@@ -263,11 +293,14 @@ for fp in deque(args.path, args.maxpath):
             url = Path(str(tf)) / Path("index.html")
             url.write_text(html, encoding="utf-8")
             if len(files):
-                """
+                userdatadir = Path().home() / Path('.config/viewer')
+                if not userdatadir.exists(): userdatadir.mkdir(parents=True)
+                chrome = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe'
+                if not Path(chrome).exists():
+                    chrome = "google-chrome-stable"
                 Popen([
-                    "google-chrome-stable",
+                    chrome,
+                    '--user-data-dir={}'.format(str(userdatadir)),
                     url.as_uri()
                 ])
-                """
-                webbrowser.open(url.as_uri())
-            time.sleep(3)
+                time.sleep(3)
