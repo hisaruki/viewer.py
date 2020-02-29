@@ -392,10 +392,5 @@
             autoslide *= -1;
         }
 
-    }).on("mousemove", function () {
-        $("#main").removeClass("hide");
-        setTimeout(function () {
-            $("#main").addClass("hide");
-        }, 1500);
     });
 })();

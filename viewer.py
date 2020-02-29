@@ -287,6 +287,7 @@ for fp in deque(args.path, args.maxpath):
             html += add_script('sub.css', 'style')
             html += add_script('jquery-3.3.1.slim.min.js')
             html += add_script('script.js')
+            html += add_script('autohide_mouse.js')
 
             html += '</body>'
             html += '</html>'
