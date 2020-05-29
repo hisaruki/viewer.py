@@ -202,7 +202,6 @@
         link.click();
     });
 
-
     $("#main img").on("click", function () {
         var img = '<img src="' + $(this).attr("src") + '">';
         $("#sub").show();
@@ -210,6 +209,78 @@
         $("#sub").append($(img));
         resize();
     });
+
+
+
+    var editor = $("<div>")
+    .css("width", "100%")
+    .css("height", "100%")
+    .css("left", "0")
+    .css("top", "0")
+    .css("background", "#000")
+    .css("z-index", "32768")
+    .css("position", "absolute")
+    .css("display", "flex")
+    .css("align-items", "center")
+    .hide();
+    editor.left = $("<div>");
+    editor.right = $("<div>");
+    editor.append(editor.left).append(editor.right);
+    $("body").append(editor);
+    $(document).on("contextmenu", "#main img", function(){
+        var img = $(this);
+        var src = img.attr("src").replace(/\r?\n/g,"");
+        var c = $("<img>").attr("src", src);
+        editor.left.empty();
+        editor.left.append(c);
+        editor.show();
+        c.cropper({
+            "toggleDragModeOnDblclick": true,
+            "viewMode": 1
+        });
+
+        var s = $("<button>").text("submit");
+        var cl = $("<button>").text("clone");
+        var d = $("<button>").text("destroy");
+        editor.right.empty();
+        editor.right.append(s).append(d);
+
+        d.on("click", function(){
+            c.cropper("destroy");
+            editor.hide();
+        });
+        s.on("click", function(){
+            var src = c.cropper('getCroppedCanvas').toDataURL('image/png');
+            img.attr("src", src);
+            c.cropper("destroy");
+            editor.hide();
+        });
+
+        cl.on("click", function(){
+            var src = c.cropper('getCroppedCanvas').toDataURL('image/png');
+            c.cropper("destroy");
+            cl = $("<img>").attr("src", src);
+            img.after(cl);
+            editor.hide();
+        });
+
+        var rotates = [1, 15, 90, -1, -15, -90];
+        for(i in rotates){
+            var r = $("<button>")
+            .text(rotates[i])
+            .attr("data-option", rotates[i])
+            .on("click", function(){
+                c.cropper(
+                    'rotate',
+                    $(this).attr("data-option")
+                );
+            })
+            editor.right.append(r);
+        }
+        editor.right.append(cl);
+        return false;
+    });
+
 
     $("#sub").on("click", function () {
         $(this).hide();

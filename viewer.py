@@ -17,6 +17,7 @@ from collections import deque
 from PIL import Image
 from screeninfo import get_monitors
 
+Image.MAX_IMAGE_PIXELS = 100000000000
 monitors = get_monitors()
 seq = 0
 while not len(monitors):
@@ -36,9 +37,14 @@ parser.add_argument("--maxpage", type=int, default=500)
 parser.add_argument("--maxpath", type=int, default=32)
 parser.add_argument("--resample", type=int, default=window_height)
 parser.add_argument("--reverse", action="store_true")
+parser.add_argument("--recursive", action="store_true")
 parser.add_argument("--nocrop", action="store_true")
 parser.add_argument("--repeat", type=int, default=None)
+parser.add_argument("--handle", default="*.*")
 args = parser.parse_args()
+
+if args.recursive:
+    args.handle = "**/*.*"
 
 if args.sort:
     args.order = args.sort
@@ -137,36 +143,49 @@ for fp in deque(args.path, args.maxpath):
 
     title = fp.stem
     brackets_list = [('\[', '\]'), ('\(', '\)'), ('【', '】'), ('（', '）')]
-    brackets_solid = [x[0] for x in brackets_list] + [x[1] for x in brackets_list]
     def replace_brakets(text, brackets):
         b0 = brackets[0]
         b1 = brackets[1]
-        m = '{}[^{}{}]*{}'.format(b0, b0, b1, b1)
+        m = '{}[^{}{}]+{}'.format(b0, b0, b1, b1)
         m = re.compile(m)
         return re.sub(m, '', text)
 
-    while True in list(map(lambda x:bool(re.search(x, title)), brackets_solid)):
+    def check_brackets(text):
+        for brackets in brackets_list:
+            b0 = brackets[0]
+            b1 = brackets[1]
+            r = re.compile('{}[^{}{}]+{}'.format(b0, b0, b1, b1))
+            return bool(re.search(r, text))
+        return False
+
+    while check_brackets(title):
         for brakets in brackets_list:
             title = replace_brakets(title, brakets)
     title = title.strip()
     html += '<title>' + title + '</title>\n'
 
-    def add_script(path, tag='script'):
-        html = '<' + tag + '>'
-        p = Path(__file__).resolve().parent
-        p /= Path(path)
-        html += p.read_text()
-        html += '</' + tag + '>'
+    def add_script(path, tag=('script', None)):
+        tag, attr = tag
+        if attr is None:
+            p = Path(__file__).resolve().parent
+            p /= Path(path)
+            html = '<{}>{}</{}>'.format(tag, p.read_text(), tag)
+        else:
+            p = Path(__file__).resolve().parent
+            p /= Path(path)
+            html = '<{} {}={}></{}>'.format(tag, attr, p, tag)
+
         return html
 
-    def as_data_uri(p):
-        m, e = guess_type(p.name)
-        bin = p.read_bytes()
+    def as_data_uri(self):
+        m, e = guess_type(self.name)
+        bin = self.read_bytes()
         src = 'data:'
         src += m
         src += ';base64,'
         src += encodebytes(bin).decode("utf-8")
         return src
+    Path.as_data_uri = as_data_uri
 
     if fp.exists():
         with tempfile.TemporaryDirectory() as tf:
@@ -205,10 +224,10 @@ for fp in deque(args.path, args.maxpath):
                         p = Path(tf) / Path(arcname)
                         print(p, len(bin))
                         p.write_bytes(bin)
-                files = [p for p in Path(str(tf)).glob("**/*.*")]
+                files = [p for p in Path(str(tf)).glob(args.handle)]
 
             if fp.is_dir():
-                for seq, p in enumerate(fp.glob("**/*.*")):
+                for seq, p in enumerate(fp.glob(args.handle)):
                     if seq >= args.maxpage:
                         break
                     tp = Path(tf) / Path(p.name)
@@ -272,8 +291,7 @@ for fp in deque(args.path, args.maxpath):
                         if args.resample:
                             p = resample(p, args.resample)
 
-                        #src = p.as_uri()
-                        src = as_data_uri(p)
+                        src = p.as_data_uri()
                         img = '\t\t\t<img src=" ' + src + ' ">\n'
                         html += img
                 except Exception as e:
@@ -284,9 +302,13 @@ for fp in deque(args.path, args.maxpath):
             html += '<script>'
             html += 'var filename = "' +fp.name+ '";\n'
             html += '</script>'
-            html += add_script('sub.css', 'style')
+            html += add_script('sub.css', ('style', None))
             html += add_script('jquery-3.3.1.slim.min.js')
-            html += add_script('script.js')
+            html += add_script('cropper.min.js')
+            html += add_script('cropper.min.css', ('style', None))
+            html += add_script('jquery-cropper.min.js')
+            #html += add_script('script.js')
+            html += add_script('script.js', ("script", "src"))
             html += add_script('autohide_mouse.js')
 
             html += '</body>'
